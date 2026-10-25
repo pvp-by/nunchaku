@@ -64,6 +64,7 @@ jobs:
             "nvrtc_13.0",
             "nvrtc_dev_13.0",
             "thrust_13.0",
+            "nvtx_13.0",
             "visual_studio_integration_13.0"
           )
 
