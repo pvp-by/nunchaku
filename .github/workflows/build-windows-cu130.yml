@@ -18,6 +18,7 @@ jobs:
       NUNCHAKU_BUILD_WHEELS: "1"
       NVCC_PREPEND_FLAGS: "-allow-unsupported-compiler"
       MAX_JOBS: "2"
+      DISTUTILS_USE_SDK: "1"
 
     steps:
       - name: Checkout Nunchaku
