@@ -1,0 +1,85 @@
+
+name: Build Nunchaku Windows CUDA 13.0
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-wheel:
+    name: Windows - Python 3.13 - Torch 2.14 - CUDA 13.0
+    runs-on: windows-2022
+    timeout-minutes: 360
+
+    env:
+      NUNCHAKU_INSTALL_MODE: ALL
+      NUNCHAKU_BUILD_WHEELS: "1"
+      NVCC_PREPEND_FLAGS: "-allow-unsupported-compiler"
+      MAX_JOBS: "2"
+
+    steps:
+      - name: Checkout Nunchaku
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          architecture: x64
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Install CUDA Toolkit 13.0
+        uses: Jimver/cuda-toolkit@v0.2.28
+        with:
+          cuda: "13.0.1"
+          method: network
+          sub-packages: '["nvcc", "cudart", "crt", "nvvm", "nvfatbin", "nvjitlink", "cublas", "cublas_dev", "nvrtc", "nvrtc_dev", "thrust", "visual_studio_integration"]'
+
+      - name: Configure CUDA environment
+        shell: pwsh
+        run: |
+          echo "CUDA_HOME=$env:CUDA_PATH" >> $env:GITHUB_ENV
+          nvcc --version
+          cl
+
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools wheel ninja build packaging
+
+      - name: Install PyTorch 2.14 CUDA 13.0
+        shell: pwsh
+        run: |
+          python -m pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cu130
+
+      - name: Check PyTorch
+        shell: pwsh
+        run: |
+          python -c "import torch; print('Torch:', torch.__version__); print('CUDA:', torch.version.cuda)"
+
+      - name: Build Nunchaku wheel
+        shell: pwsh
+        run: |
+          python -m build --wheel --no-isolation
+
+      - name: Show built wheels
+        shell: pwsh
+        run: |
+          Get-ChildItem dist\*.whl
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nunchaku-win-py313-torch214-cu130
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 14
