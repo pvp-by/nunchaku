@@ -65,6 +65,14 @@ jobs:
             "nvrtc_dev_13.0",
             "thrust_13.0",
             "nvtx_13.0",
+            "cusparse_13.0",
+            "cusparse_dev_13.0",
+            "cusolver_13.0",
+            "cusolver_dev_13.0",
+            "curand_13.0",
+            "curand_dev_13.0",
+            "cufft_13.0",
+            "cufft_dev_13.0",
             "visual_studio_integration_13.0"
           )
 
@@ -116,6 +124,27 @@ jobs:
         shell: pwsh
         run: |
           python -c "import torch; print('Torch:', torch.__version__); print('CUDA:', torch.version.cuda)"
+
+      - name: Verify CUDA headers
+        shell: pwsh
+        run: |
+          $headers = @(
+            "cuda_runtime.h",
+            "cublas_v2.h",
+            "cusparse.h",
+            "cusolverDn.h",
+            "curand.h",
+            "cufft.h",
+            "nvtx3\nvToolsExt.h"
+          )
+
+          foreach ($header in $headers) {
+            $path = Join-Path $env:CUDA_HOME "include\$header"
+            if (!(Test-Path $path)) {
+              throw "Missing CUDA header: $header"
+            }
+            Write-Host "OK: $header"
+          }
 
       - name: Build Nunchaku wheel
         shell: pwsh
