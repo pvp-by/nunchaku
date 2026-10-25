@@ -41,6 +41,8 @@ jobs:
         with:
           cuda: "13.0.1"
           method: network
+          use-github-cache: "false"
+          use-local-cache: "false"
           sub-packages: '["nvcc", "cudart", "crt", "nvvm", "nvfatbin", "nvjitlink", "cublas", "cublas_dev", "nvrtc", "nvrtc_dev", "thrust", "visual_studio_integration"]'
 
       - name: Configure CUDA environment
