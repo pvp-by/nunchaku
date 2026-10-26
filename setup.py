@@ -41,6 +41,28 @@ def get_sm_targets() -> list[str]:
     support_sm120 = packaging_version.parse(nvcc_version) >= packaging_version.parse("12.8")
     support_sm121 = packaging_version.parse(nvcc_version) >= packaging_version.parse("13.0")
 
+    requested = os.getenv("NUNCHAKU_SM_TARGETS", "").strip()
+
+    if requested:
+        supported = {"75", "80", "86", "89", "120a", "121a"}
+
+        targets = [
+            item.strip().lower().removeprefix("sm_")
+            for item in requested.split(",")
+        ]
+
+        invalid = [sm for sm in targets if sm not in supported]
+        if invalid:
+            raise ValueError(f"Unsupported SM targets: {invalid}")
+
+        if "120a" in targets and not support_sm120:
+            raise ValueError("sm_120a requires CUDA Toolkit >= 12.8")
+
+        if "121a" in targets and not support_sm121:
+            raise ValueError("sm_121a requires CUDA Toolkit >= 13.0")
+
+        return list(dict.fromkeys(targets))
+
     install_mode = os.getenv("NUNCHAKU_INSTALL_MODE", "FAST")
     if install_mode == "FAST":
         ret = []
